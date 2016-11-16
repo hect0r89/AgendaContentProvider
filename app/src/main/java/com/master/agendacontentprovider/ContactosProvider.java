@@ -7,9 +7,8 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.support.annotation.Nullable;
-
+import com.master.agendacontentprovider.ContactContract.ContactEntry;
 
 
 /**
@@ -18,22 +17,10 @@ import android.support.annotation.Nullable;
 
 public class ContactosProvider extends ContentProvider {
 
-    public static final String TABLE_NAME = "Contactos";
-
-    public static final	class Contacto	implements BaseColumns
-    {		private Contacto()	{}
-        //Nombres	de	columnas
-        public static final String COLUMN_NAME_FIRST_NAME = "nombre";
-        public static final String COLUMN_NAME_LAST_NAME = "apellidos";
-        public static final String COLUMN_NAME_EMAIL = "correo";
-        public static final String COLUMN_NAME_ADDRESS = "direccion";
-        public static final String COLUMN_NAME_COLOR = "color";
-    }
-
     //Definición del CONTENT_URI
     public static final	String AUTHORITY ="com.master.agendacontentprovider";
     private static final String uri =
-            "content://"+AUTHORITY+"/"+TABLE_NAME;
+            "content://"+AUTHORITY+"/"+ ContactEntry.TABLE_NAME;
 
     public static final Uri CONTENT_URI = Uri.parse(uri);
 
@@ -79,7 +66,7 @@ public class ContactosProvider extends ContentProvider {
 
         SQLiteDatabase db = contdbh.getWritableDatabase();
 
-        Cursor c = db.query(TABLE_NAME, columns, where,
+        Cursor c = db.query(ContactEntry.TABLE_NAME, columns, where,
                 selectionArgs, null, null, sortOrder);
 
         return c;
@@ -108,7 +95,7 @@ public class ContactosProvider extends ContentProvider {
 
         SQLiteDatabase db = contdbh.getWritableDatabase();
 
-        regId = db.insert(TABLE_NAME, null, values);
+        regId = db.insert(ContactEntry.TABLE_NAME, null, values);
 
         Uri newUri = ContentUris.withAppendedId(CONTENT_URI, regId);
 
@@ -127,7 +114,7 @@ public class ContactosProvider extends ContentProvider {
 
         SQLiteDatabase db = contdbh.getWritableDatabase();
 
-        cont = db.delete(TABLE_NAME, where, selectionArgs);
+        cont = db.delete(ContactEntry.TABLE_NAME, where, selectionArgs);
 
         return cont;
     }
@@ -144,7 +131,7 @@ public class ContactosProvider extends ContentProvider {
 
         SQLiteDatabase db = contdbh.getWritableDatabase();
 
-        cont = db.update(TABLE_NAME, values, where, selectionArgs);
+        cont = db.update(ContactEntry.TABLE_NAME, values, where, selectionArgs);
 
         return cont;
     }
