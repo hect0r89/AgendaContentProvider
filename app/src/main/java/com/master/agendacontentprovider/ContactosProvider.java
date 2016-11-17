@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+
 import com.master.agendacontentprovider.ContactContract.ContactEntry;
 
 
@@ -18,11 +19,15 @@ import com.master.agendacontentprovider.ContactContract.ContactEntry;
 public class ContactosProvider extends ContentProvider {
 
     //Definición del CONTENT_URI
-    public static final	String AUTHORITY ="com.master.agendacontentprovider";
-    private static final String uri =
-            "content://"+AUTHORITY+"/"+ ContactEntry.TABLE_NAME;
+    public static final String AUTHORITY = "com.master.agendacontentprovider";
+    private static final String uriContact =
+            "content://" + AUTHORITY + "/" + ContactEntry.TABLE_NAME;
 
-    public static final Uri CONTENT_URI = Uri.parse(uri);
+    public static final Uri CONTENT_CONTACT_URI = Uri.parse(uriContact);
+    private static final String phoneContact =
+            "content://" + AUTHORITY + "/" + ContactEntry.TABLE_NAME;
+
+    public static final Uri CONTENT_PHONE_URI = Uri.parse(phoneContact);
 
     private ContactosSQLiteHelper contdbh;
     private static final String DB_NOMBRE = "DBContactos";
@@ -31,18 +36,26 @@ public class ContactosProvider extends ContentProvider {
     //UriMatcher
     private static final int CONTACTOS = 1;
     private static final int CONTACTOS_ID = 2;
+    private static final int TELEFONOS = 3;
+    private static final int TELEFONOS_ID = 4;
     private static final UriMatcher uriMatcher;
 
-    public final	static String SINGLE_MIME	=
+    public final static String SINGLE_MIME_CONTACT =
             "vnd.android.cursor.item/vnd.android.contacto";
-    public final	static String MULTIPLE_MIME	=
+    public final static String MULTIPLE_MIME_CONTACT =
             "vnd.android.cursor.dir/vnd.android.contacto";
+    public final static String SINGLE_MIME_PHONE =
+            "vnd.android.cursor.item/vnd.android.telefono";
+    public final static String MULTIPLE_MIME_PHONE =
+            "vnd.android.cursor.dir/vnd.android.telefono";
 
     //Inicializamos el UriMatcher
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI(AUTHORITY, "contactos", CONTACTOS);
         uriMatcher.addURI(AUTHORITY, "contactos/#", CONTACTOS_ID);
+        uriMatcher.addURI(AUTHORITY, "telefonos/", TELEFONOS);
+        uriMatcher.addURI(AUTHORITY, "telefonos/#", TELEFONOS_ID);
     }
 
 
@@ -57,19 +70,30 @@ public class ContactosProvider extends ContentProvider {
     @Nullable
     @Override
     public Cursor query(Uri uri, String[] columns, String selection, String[] selectionArgs, String sortOrder) {
-
-        //Si es una consulta a un ID concreto construimos el WHERE
-        String where = selection;
-        if (uriMatcher.match(uri) == CONTACTOS_ID) {
-            where = "_id=" + uri.getLastPathSegment();
-        }
-
         SQLiteDatabase db = contdbh.getWritableDatabase();
 
-        Cursor c = db.query(ContactEntry.TABLE_NAME, columns, where,
-                selectionArgs, null, null, sortOrder);
+        if (selection != null) {
+            selection = "";
+        }
+        switch (uriMatcher.match(uri)) {
+            case CONTACTOS:
+                return db.query(ContactEntry.TABLE_NAME, columns, selection,
+                        selectionArgs, null, null, sortOrder);
 
-        return c;
+            case CONTACTOS_ID:
+                return db.query(ContactEntry.TABLE_NAME, columns, "_id=" + uri.getLastPathSegment(),
+                        selectionArgs, null, null, sortOrder);
+            case TELEFONOS:
+                return db.query(PhoneContract.PhoneEntry.TABLE_NAME, columns, selection,
+                        selectionArgs, null, null, sortOrder);
+
+            case TELEFONOS_ID:
+                return db.query(PhoneContract.PhoneEntry.TABLE_NAME, columns, PhoneContract.PhoneEntry._ID + uri.getLastPathSegment(),
+                        selectionArgs, null, null, sortOrder);
+
+        }
+
+        return null;
     }
 
     @Nullable
@@ -77,12 +101,15 @@ public class ContactosProvider extends ContentProvider {
     public String getType(Uri uri) {
         int match = uriMatcher.match(uri);
 
-        switch (match)
-        {
+        switch (match) {
             case CONTACTOS:
-                return SINGLE_MIME;
+                return SINGLE_MIME_CONTACT;
             case CONTACTOS_ID:
-                return MULTIPLE_MIME;
+                return MULTIPLE_MIME_CONTACT;
+            case TELEFONOS:
+                return SINGLE_MIME_PHONE;
+            case TELEFONOS_ID:
+                return MULTIPLE_MIME_PHONE;
             default:
                 return null;
         }
@@ -95,12 +122,18 @@ public class ContactosProvider extends ContentProvider {
 
         SQLiteDatabase db = contdbh.getWritableDatabase();
 
-        regId = db.insert(ContactEntry.TABLE_NAME, null, values);
+        switch (uriMatcher.match(uri)){
+            case CONTACTOS:
+                regId = db.insert(ContactEntry.TABLE_NAME, null, values);
+                return ContentUris.withAppendedId(CONTENT_CONTACT_URI, regId);
+            case TELEFONOS:
+                regId = db.insert(PhoneContract.PhoneEntry.TABLE_NAME, null, values);
+                return ContentUris.withAppendedId(CONTENT_PHONE_URI, regId);
+        }
 
-        Uri newUri = ContentUris.withAppendedId(CONTENT_URI, regId);
-
-        return newUri;
+        return null;
     }
+
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
