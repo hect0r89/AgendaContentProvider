@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 
 import com.master.agendacontentprovider.ContactContract.ContactEntry;
+import com.master.agendacontentprovider.PhoneContract.PhoneEntry;
 
 
 /**
@@ -25,7 +26,7 @@ public class ContactosProvider extends ContentProvider {
 
     public static final Uri CONTENT_CONTACT_URI = Uri.parse(uriContact);
     private static final String phoneContact =
-            "content://" + AUTHORITY + "/" + ContactEntry.TABLE_NAME;
+            "content://" + AUTHORITY + "/" + PhoneEntry.TABLE_NAME;
 
     public static final Uri CONTENT_PHONE_URI = Uri.parse(phoneContact);
 
@@ -72,7 +73,7 @@ public class ContactosProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] columns, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteDatabase db = contdbh.getWritableDatabase();
 
-        if (selection != null) {
+        if (selection == null) {
             selection = "";
         }
         switch (uriMatcher.match(uri)) {
@@ -84,11 +85,11 @@ public class ContactosProvider extends ContentProvider {
                 return db.query(ContactEntry.TABLE_NAME, columns, selection+ContactEntry._ID+"=" + uri.getLastPathSegment(),
                         selectionArgs, null, null, sortOrder);
             case TELEFONOS:
-                return db.query(PhoneContract.PhoneEntry.TABLE_NAME, columns, selection,
+                return db.query(PhoneEntry.TABLE_NAME, columns, selection,
                         selectionArgs, null, null, sortOrder);
 
             case TELEFONOS_ID:
-                return db.query(PhoneContract.PhoneEntry.TABLE_NAME, columns, selection+PhoneContract.PhoneEntry._ID +"=" + uri.getLastPathSegment(),
+                return db.query(PhoneEntry.TABLE_NAME, columns, selection+PhoneEntry._ID +"=" + uri.getLastPathSegment(),
                         selectionArgs, null, null, sortOrder);
 
         }
@@ -127,7 +128,7 @@ public class ContactosProvider extends ContentProvider {
                 regId = db.insert(ContactEntry.TABLE_NAME, null, values);
                 return ContentUris.withAppendedId(CONTENT_CONTACT_URI, regId);
             case TELEFONOS:
-                regId = db.insert(PhoneContract.PhoneEntry.TABLE_NAME, null, values);
+                regId = db.insert(PhoneEntry.TABLE_NAME, null, values);
                 return ContentUris.withAppendedId(CONTENT_PHONE_URI, regId);
         }
 
@@ -137,35 +138,32 @@ public class ContactosProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        int cont;
 
-        //Si es una consulta a un ID concreto construimos el WHERE
-        String where = selection;
-        if (uriMatcher.match(uri) == CONTACTOS_ID) {
-            where = "_id=" + uri.getLastPathSegment();
+        if(selection==null){
+            selection = "";
         }
-
         SQLiteDatabase db = contdbh.getWritableDatabase();
-
-        cont = db.delete(ContactEntry.TABLE_NAME, where, selectionArgs);
-
-        return cont;
+        switch (uriMatcher.match(uri)){
+            case CONTACTOS_ID:
+                return db.delete(ContactEntry.TABLE_NAME, selection+ContactEntry._ID+"="+uri.getLastPathSegment(), selectionArgs);
+            case TELEFONOS_ID:
+                return db.delete(PhoneEntry.TABLE_NAME, selection+ PhoneEntry._ID+"="+uri.getLastPathSegment(), selectionArgs);
+        }
+        return 0;
     }
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        int cont;
-
-        //Si es una consulta a un ID concreto construimos el WHERE
-        String where = selection;
-        if (uriMatcher.match(uri) == CONTACTOS_ID) {
-            where = "_id=" + uri.getLastPathSegment();
+        if(selection==null){
+            selection = "";
         }
-
         SQLiteDatabase db = contdbh.getWritableDatabase();
-
-        cont = db.update(ContactEntry.TABLE_NAME, values, where, selectionArgs);
-
-        return cont;
+        switch (uriMatcher.match(uri)){
+            case CONTACTOS_ID:
+                return db.update(ContactEntry.TABLE_NAME,values, selection+ContactEntry._ID+"="+uri.getLastPathSegment(), selectionArgs);
+            case TELEFONOS_ID:
+                return db.update(PhoneEntry.TABLE_NAME, values, selection+ PhoneEntry._ID+"="+uri.getLastPathSegment(), selectionArgs);
+        }
+        return 0;
     }
 }
