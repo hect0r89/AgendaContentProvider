@@ -81,14 +81,14 @@ public class ContactosProvider extends ContentProvider {
                         selectionArgs, null, null, sortOrder);
 
             case CONTACTOS_ID:
-                return db.query(ContactEntry.TABLE_NAME, columns, "_id=" + uri.getLastPathSegment(),
+                return db.query(ContactEntry.TABLE_NAME, columns, selection+ContactEntry._ID+"=" + uri.getLastPathSegment(),
                         selectionArgs, null, null, sortOrder);
             case TELEFONOS:
                 return db.query(PhoneContract.PhoneEntry.TABLE_NAME, columns, selection,
                         selectionArgs, null, null, sortOrder);
 
             case TELEFONOS_ID:
-                return db.query(PhoneContract.PhoneEntry.TABLE_NAME, columns, PhoneContract.PhoneEntry._ID + uri.getLastPathSegment(),
+                return db.query(PhoneContract.PhoneEntry.TABLE_NAME, columns, selection+PhoneContract.PhoneEntry._ID +"=" + uri.getLastPathSegment(),
                         selectionArgs, null, null, sortOrder);
 
         }
